@@ -2816,7 +2816,7 @@ private:
                 OrderCaps order_caps;
                 order_caps.pad4octetsA = 0x40420f00;
                 order_caps.numberFonts = 0x2f;
-                order_caps.orderFlags = 0x22;
+                order_caps.orderFlags = NEGOTIATEORDERSUPPORT | COLORINDEXSUPPORT;
                 order_caps.orderSupport[TS_NEG_DSTBLT_INDEX]             = 1;
                 order_caps.orderSupport[TS_NEG_PATBLT_INDEX]             = 1;
                 order_caps.orderSupport[TS_NEG_SCRBLT_INDEX]             = 1;
@@ -2826,8 +2826,8 @@ private:
                 order_caps.orderSupport[TS_NEG_MULTI_DRAWNINEGRID_INDEX] = 1;
                 order_caps.orderSupport[TS_NEG_POLYLINE_INDEX]           = 1;
                 order_caps.orderSupport[TS_NEG_ELLIPSE_SC_INDEX]         = 1;
-                order_caps.orderSupport[TS_NEG_INDEX_INDEX]              = 1;
-                order_caps.orderSupport[UnusedIndex3] = 1;
+                order_caps.orderSupport[TS_NEG_GLYPH_INDEX]              = 1;
+                order_caps.orderSupport[TS_NEG_OPAQUERECT_INDEX] = 1;
                 order_caps.textFlags = 0x06a1;
                 order_caps.pad4octetsB = 0x0f4240;
                 order_caps.desktopSaveSize = 0x0f4240;

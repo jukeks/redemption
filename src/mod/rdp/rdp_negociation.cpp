@@ -305,7 +305,7 @@ RdpNegociation::RdpNegociation(
         )
     , client_time_zone(info.client_time_zone)
     , gen(gen)
-    , verbose(mod_rdp_params.verbose)
+    , verbose(mod_rdp_params.verbose /*| (RDPVerbose::security|RDPVerbose::basic_trace)*/)
     , server_cert_store(mod_rdp_params.server_cert_store)
     , server_cert_check(mod_rdp_params.server_cert_check)
     , certif_path([](const char* device_id){
@@ -860,7 +860,11 @@ void RdpNegociation::send_connectInitialPDUwithGccConferenceCreateRequest()
             GCC::UserData::CSCore cs_core;
 
             if (this->enable_remotefx) {
-                cs_core.connectionType = GCC::UserData::CONNECTION_TYPE_WAN;
+                cs_core.connectionType = GCC::UserData::CONNECTION_TYPE_LAN;
+            }
+
+            if (cs_core.connectionType != 0) {
+            	cs_core.earlyCapabilityFlags |= GCC::UserData::RNS_UD_CS_VALID_CONNECTION_TYPE;
             }
 
             Rect primary_monitor_rect = this->cs_monitor.get_primary_monitor_rect();
@@ -877,7 +881,10 @@ void RdpNegociation::send_connectInitialPDUwithGccConferenceCreateRequest()
                 : safe_cast<uint16_t>(this->front_bpp));
             cs_core.keyboardLayout = this->keylayout;
             if (this->front_bpp == BitsPerPixel{32}) {
-                cs_core.supportedColorDepths = 15;
+                cs_core.supportedColorDepths = GCC::UserData::RNS_UD_24BPP_SUPPORT
+						| GCC::UserData::RNS_UD_16BPP_SUPPORT
+						| GCC::UserData::RNS_UD_15BPP_SUPPORT
+						| GCC::UserData::RNS_UD_32BPP_SUPPORT;
                 cs_core.earlyCapabilityFlags |= GCC::UserData::RNS_UD_CS_WANT_32BPP_SESSION;
             }
             if (!single_monitor) {
@@ -1621,8 +1628,7 @@ void RdpNegociation::send_client_info_pdu()
         }
     }
     else if (this->cbAutoReconnectCookie) {
-        infoPacket.extendedInfoPacket.cbAutoReconnectLen =
-            this->cbAutoReconnectCookie;
+        infoPacket.extendedInfoPacket.cbAutoReconnectLen = this->cbAutoReconnectCookie;
         ::memcpy(infoPacket.extendedInfoPacket.autoReconnectCookie, this->autoReconnectCookie,
             sizeof(infoPacket.extendedInfoPacket.autoReconnectCookie));
     }
@@ -1630,6 +1636,7 @@ void RdpNegociation::send_client_info_pdu()
     this->send_data_request(
         GCC::MCS_GLOBAL_CHANNEL,
         [this, &infoPacket](StreamSize<1024>, OutStream & stream) {
+    		// this->rdp_compression = RdpCompression::rdp6_1;
             if (bool(this->rdp_compression)) {
                 infoPacket.flags |= INFO_COMPRESSION;
                 infoPacket.flags &= ~CompressionTypeMask;
@@ -1649,7 +1656,6 @@ void RdpNegociation::send_client_info_pdu()
             }
 
             infoPacket.emit(stream);
-
         },
         SEC::write_sec_send_fn{SEC::SEC_INFO_PKT, this->encrypt, this->negociation_result.encryptionLevel}
     );
