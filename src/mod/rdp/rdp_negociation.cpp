@@ -247,6 +247,21 @@ void RdpNegociation::RDPServerNotifier::server_cert_error(const char * str_error
     }
 }
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+bool RdpNegociation::RDPServerNotifier::server_cert_callback(const X509 * certificate)
+{
+    if (this->certificate_callback != nullptr) {
+        return this->certificate_callback(certificate);
+    }
+
+    return false;
+}
+
+void RdpNegociation::RDPServerNotifier::set_cert_callback(const ServerCertificateCallback callback) noexcept {
+    this->certificate_callback = callback;
+}
+#endif
+
 void RdpNegociation::RDPServerNotifier::log6_server_cert(charp_or_string type, charp_or_string description, const ArcsightLogInfo & arc_info)
 {
     this->message.assign(type.data, {{"description", description.data}});
@@ -447,6 +462,14 @@ void RdpNegociation::set_program(char const* program, char const* directory) noe
     utils::strlcpy(this->program, program);
     utils::strlcpy(this->directory, directory);
 }
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+void RdpNegociation::set_cert_callback(const ServerCertificateCallback callback) noexcept
+{
+    this->server_notifier.set_cert_callback(callback);
+}
+#endif
+
 
 void RdpNegociation::start_negociation()
 {

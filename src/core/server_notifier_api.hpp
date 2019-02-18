@@ -22,6 +22,13 @@
 
 #pragma once
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+#include <openssl/ssl.h>
+#include <functional> // std::function
+
+typedef std::function<bool(const X509*)> ServerCertificateCallback;
+#endif
+
 class ServerNotifier {
 public:
     virtual void server_access_allowed() = 0;
@@ -29,6 +36,10 @@ public:
     virtual void server_cert_success() = 0;
     virtual void server_cert_failure() = 0;
     virtual void server_cert_error(const char * str_error) = 0;
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    virtual bool server_cert_callback(const X509* certificate) = 0;
+#endif
 
     virtual ~ServerNotifier() = default;
 };
@@ -39,6 +50,11 @@ public:
     void server_cert_create() override {}
     void server_cert_success() override {}
     void server_cert_failure() override {}
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    bool server_cert_callback(const X509* certificate) override { (void)certificate; return true; }
+#endif
+
     // TODO used array_view ?
     void server_cert_error(const char * str_error) override { (void)str_error; }
 };

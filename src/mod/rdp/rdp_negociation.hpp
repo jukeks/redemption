@@ -87,6 +87,11 @@ private:
         void server_cert_failure() override;
         void server_cert_error(const char * str_error) override;
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+        bool server_cert_callback(const X509* certificate) override;
+        void set_cert_callback(const ServerCertificateCallback callback) noexcept;
+#endif
+
     private:
         const ServerNotification server_access_allowed_message;
         const ServerNotification server_cert_create_message;
@@ -98,6 +103,10 @@ private:
         KeyQvalueFormatter message;
         FrontAPI& front;
         ReportMessageApi& report_message;
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+        ServerCertificateCallback certificate_callback;
+#endif
 
         void log6_server_cert(charp_or_string type, charp_or_string description, const ArcsightLogInfo & arc_info);
     };
@@ -197,6 +206,11 @@ public:
     );
 
     void set_program(char const* program, char const* directory) noexcept;
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    void set_cert_callback(const ServerCertificateCallback callback) noexcept;
+#endif
+
     void start_negociation();
     bool recv_data(TpduBuffer& buf);
 
