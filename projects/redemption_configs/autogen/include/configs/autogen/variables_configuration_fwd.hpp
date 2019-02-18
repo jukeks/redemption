@@ -168,6 +168,8 @@ namespace cfg {
         struct experimental_fix_input_event_sync;
         struct experimental_fix_too_long_cookie;
         struct split_domain;
+        struct server_cert_callback;
+        struct server_cert;
     };
 
     struct metrics {

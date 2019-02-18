@@ -412,6 +412,9 @@ void config_spec_definition(Writer && W)
         W.member(advanced_in_gui, no_sesman, L, type_<bool>(), "split_domain", desc{
             "Force to split target domain and username with '@' separator."
         }, set(false));
+    
+        W.member(no_ini_no_gui, sesman_to_proxy, L, type_<bool>(), "server_cert_callback");
+        W.member(no_ini_no_gui, proxy_to_sesman, L, type_<std::string>(), "server_cert");
     });
 
     W.section("metrics", [&]
