@@ -257,6 +257,10 @@ bool RdpNegociation::RDPServerNotifier::server_cert_callback(const X509 * certif
     return false;
 }
 
+bool RdpNegociation::RDPServerNotifier::server_cert_callback_required() {
+    return this->certificate_callback != nullptr;
+}
+
 void RdpNegociation::RDPServerNotifier::set_cert_callback(const ServerCertificateCallback callback) noexcept {
     this->certificate_callback = callback;
 }

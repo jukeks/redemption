@@ -255,6 +255,24 @@ public:
             return Transport::TlsResult::Fail;
         }
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+        if (server_notifier.server_cert_callback_required()) {
+            LOG(LOG_INFO, "proxying certficate validation to authentifier");
+
+            bool valid = server_notifier.server_cert_callback(px509);
+            X509_free(px509);
+
+            if (!valid) {
+                LOG(LOG_WARNING, "server_cert_callback() failed");
+                server_notifier.server_cert_error(strerror(errno));
+                return Transport::TlsResult::Fail;
+            } else {
+                server_notifier.server_access_allowed();
+                return Transport::TlsResult::Ok;
+            }
+        }
+#endif
+
         // TODO("Before to have default value certificate doesn't exists")
         bool bad_certificate_path = false;
         error_type checking_exception = NO_ERROR;

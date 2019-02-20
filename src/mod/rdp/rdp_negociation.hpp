@@ -89,6 +89,7 @@ private:
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
         bool server_cert_callback(const X509* certificate) override;
+        bool server_cert_callback_required() override;
         void set_cert_callback(const ServerCertificateCallback callback) noexcept;
 #endif
 

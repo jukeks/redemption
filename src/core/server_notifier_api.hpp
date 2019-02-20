@@ -38,6 +38,7 @@ public:
     virtual void server_cert_error(const char * str_error) = 0;
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    virtual bool server_cert_callback_required() = 0;
     virtual bool server_cert_callback(const X509* certificate) = 0;
 #endif
 
@@ -52,7 +53,8 @@ public:
     void server_cert_failure() override {}
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
-    bool server_cert_callback(const X509* certificate) override { (void)certificate; return true; }
+    bool server_cert_callback(const X509* certificate) override { (void)certificate; return false; }
+    bool server_cert_callback_required() override { return false; };
 #endif
 
     // TODO used array_view ?
