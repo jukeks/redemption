@@ -415,6 +415,7 @@ void config_spec_definition(Writer && W)
     
         W.member(no_ini_no_gui, sesman_to_proxy, L, type_<bool>(), "server_cert_callback");
         W.member(no_ini_no_gui, proxy_to_sesman, L, type_<std::string>(), "server_cert");
+        W.member(no_ini_no_gui, sesman_rw, L, type_<bool>(), "server_cert_valid");
     });
 
     W.section("metrics", [&]

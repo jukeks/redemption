@@ -170,6 +170,7 @@ namespace cfg {
         struct split_domain;
         struct server_cert_callback;
         struct server_cert;
+        struct server_cert_valid;
     };
 
     struct metrics {
