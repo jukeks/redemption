@@ -267,7 +267,15 @@ public:
                 server_notifier.server_cert_error(strerror(errno));
                 return Transport::TlsResult::Fail;
             } else {
-                server_notifier.server_access_allowed();
+                if (error_message) {
+                    error_message->clear();
+                }
+
+                this->io = this->allocated_ssl;
+                this->tls = true;
+
+                server_notifier.server_cert_success();
+                //server_notifier.server_access_allowed();
                 return Transport::TlsResult::Ok;
             }
         }

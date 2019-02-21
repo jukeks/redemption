@@ -384,6 +384,12 @@ RdpNegociation::RdpNegociation(
     this->negociation_result.front_width -= this->negociation_result.front_width % 4;
     this->negociation_result.front_height = info.screen_info.height;
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    if (mod_rdp_params.server_cert_callback != nullptr) {
+        this->server_notifier.set_cert_callback(mod_rdp_params.server_cert_callback);
+    }
+#endif
+
     if (this->cbAutoReconnectCookie) {
         ::memcpy(this->autoReconnectCookie, info.autoReconnectCookie, sizeof(this->autoReconnectCookie));
     }

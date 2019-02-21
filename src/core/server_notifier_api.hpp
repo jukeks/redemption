@@ -26,7 +26,7 @@
 #include <openssl/ssl.h>
 #include <functional> // std::function
 
-typedef std::function<bool(const X509*)> ServerCertificateCallback;
+using ServerCertificateCallback = std::function<bool(const X509*)>;
 #endif
 
 class ServerNotifier {

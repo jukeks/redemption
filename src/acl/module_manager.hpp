@@ -449,6 +449,10 @@ private:
     rdp_api*       rdpapi = nullptr;
     windowing_api* winapi = nullptr;
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    SessionReactor::SesmanEventPtr sesman_event = nullptr;
+#endif
+
     SocketTransport * socket_transport = nullptr;
 
 public:

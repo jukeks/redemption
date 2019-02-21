@@ -30,6 +30,8 @@
 #include "mod/rdp/channels/sespro_clipboard_based_launcher.hpp"
 #include "core/RDP/windows_execute_shell_params.hpp"
 
+#include "core/server_notifier_api.hpp"
+
 
 #include <chrono>
 #include <string>
@@ -152,6 +154,10 @@ struct ModRDPParams
     ServerNotification server_cert_success_message = ServerNotification::syslog;
     ServerNotification server_cert_failure_message = ServerNotification::syslog;
     ServerNotification server_cert_error_message = ServerNotification::syslog;
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    ServerCertificateCallback server_cert_callback;
+#endif
 
     bool hide_client_name = false;
 

@@ -37,6 +37,40 @@
 # include "mod/metrics_hmac.hpp"
 #endif
 
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+static int cert_to_escaped_string(const X509* cert, std::string& output) {
+    if (!cert) {
+        return -1;
+    }
+
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (!bio) {
+        return -1;
+    }
+
+    if (!PEM_write_bio_X509(bio, const_cast<X509*>(cert))) {
+        BIO_free(bio);
+        return -1;
+    }
+
+    std::size_t pem_len = bio->num_write + 1;
+    char* pem = new char[pem_len]();
+    std::fill(pem, pem + pem_len, 0);
+
+    BIO_read(bio, pem, bio->num_write);
+    BIO_free(bio);
+
+    output = std::string(pem);
+    delete[] pem;
+
+    std::replace(output.begin(), output.end(), '\n', '\x01');
+
+    return 0;
+}
+
+static SessionReactor::SesmanEventPtr sesman_event;
+#endif
+
 void ModuleManager::create_mod_rdp(
     AuthApi& authentifier, ReportMessageApi& report_message,
     Inifile& ini, FrontAPI& front, ClientInfo client_info /* /!\ modified */,
@@ -196,6 +230,37 @@ void ModuleManager::create_mod_rdp(
     mod_rdp_params.server_cert_success_message         = ini.get<cfg::mod_rdp::server_cert_success_message>();
     mod_rdp_params.server_cert_failure_message         = ini.get<cfg::mod_rdp::server_cert_failure_message>();
     mod_rdp_params.server_cert_error_message           = ini.get<cfg::mod_rdp::server_cert_error_message>();
+
+#ifdef REDEMPTION_SERVER_CERT_CALLBACK
+    if (ini.get<cfg::mod_rdp::server_cert_callback>()) {
+        mod_rdp_params.server_cert_callback = [this, &ini, &authentifier](const X509* certificate) -> bool {
+            std::string blob_str;
+            if (cert_to_escaped_string(certificate, blob_str)) {
+                LOG(LOG_ERR, "cert_to_string failed");
+                return false;
+            }
+
+            LOG(LOG_INFO, "cert pem: %s", blob_str);
+
+            ini.set_acl<cfg::mod_rdp::server_cert>(blob_str);
+            ini.ask<cfg::mod_rdp::server_cert_valid>();
+            
+            this->sesman_event = this->session_reactor.create_sesman_event()
+            .on_action([&](JLN_ACTION_CTX ctx, Inifile& ini){
+                bool valid = ini.get<cfg::mod_rdp::server_cert_valid>();
+                if (valid) {
+                    LOG(LOG_INFO, "certificate was valid according to authentifier");
+                    return ctx.ready();
+                }
+
+                LOG(LOG_INFO, "certificate was invalid according to authentifier");
+                return ctx.exception(Error(ERR_TRANSPORT_TLS_CERTIFICATE_INVALID));
+            });
+
+            return true;
+        };
+    }
+#endif
 
     mod_rdp_params.hide_client_name                    = ini.get<cfg::mod_rdp::hide_client_name>();
 
