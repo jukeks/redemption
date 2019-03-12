@@ -53,11 +53,11 @@ static int cert_to_escaped_string(const X509* cert, std::string& output) {
         return -1;
     }
 
-    std::size_t pem_len = bio->num_write + 1;
+    std::size_t pem_len = BIO_number_written(bio) + 1;
     char* pem = new char[pem_len]();
     std::fill(pem, pem + pem_len, 0);
 
-    BIO_read(bio, pem, bio->num_write);
+    BIO_read(bio, pem, BIO_number_written(bio));
     BIO_free(bio);
 
     output = std::string(pem);
@@ -233,31 +233,47 @@ void ModuleManager::create_mod_rdp(
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
     if (ini.get<cfg::mod_rdp::server_cert_callback>()) {
-        mod_rdp_params.server_cert_callback = [this, &ini, &authentifier](const X509* certificate) -> bool {
+        mod_rdp_params.server_cert_callback = [this, &ini, result = CertificateResult::wait](const X509* certificate, std::function<void()> cb) mutable -> CertificateResult {
+            LOG(LOG_INFO, "HERE1");
+            if (result != CertificateResult::wait) {
+                LOG(LOG_INFO, "already had result");
+                return result;
+            }
+
+            LOG(LOG_INFO, "HERE2");
+
             std::string blob_str;
             if (cert_to_escaped_string(certificate, blob_str)) {
                 LOG(LOG_ERR, "cert_to_string failed");
-                return false;
+                return CertificateResult::invalid;
             }
 
             LOG(LOG_INFO, "cert pem: %s", blob_str);
 
             ini.set_acl<cfg::mod_rdp::server_cert>(blob_str);
             ini.ask<cfg::mod_rdp::server_cert_valid>();
-            
+
+            LOG(LOG_INFO, "HERE3");
+
             this->sesman_event = this->session_reactor.create_sesman_event()
-            .on_action([&](JLN_ACTION_CTX ctx, Inifile& ini){
+            .on_action([cb=std::move(cb), &result](JLN_ACTION_CTX ctx, Inifile& ini){
                 bool valid = ini.get<cfg::mod_rdp::server_cert_valid>();
                 if (valid) {
                     LOG(LOG_INFO, "certificate was valid according to authentifier");
-                    return ctx.ready();
+                    result = CertificateResult::valid;
+                } else {
+                    LOG(LOG_INFO, "certificate was invalid according to authentifier");
+                    result = CertificateResult::invalid;
                 }
 
-                LOG(LOG_INFO, "certificate was invalid according to authentifier");
-                return ctx.exception(Error(ERR_TRANSPORT_TLS_CERTIFICATE_INVALID));
+                cb();
+
+                return ctx.ready();
             });
 
-            return true;
+            LOG(LOG_INFO, "HERE4");
+
+            return result;
         };
     }
 #endif

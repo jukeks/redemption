@@ -28,6 +28,7 @@ struct Private_RdpNegociation
 {
     RdpNegociation rdp_negociation;
     SessionReactor::GraphicEventPtr graphic_event;
+    SessionReactor::SesmanEventPtr sesman_event;
 
     template<class... Ts>
     explicit Private_RdpNegociation(char const* program, char const* directory, Ts&&... xs)
@@ -112,6 +113,20 @@ void mod_rdp::init_negociate_event_(
             JLN_TOP_CTX ctx, gdi::GraphicApi&, Private_RdpNegociation& private_rdp_negociation
         ){
             RdpNegociation& rdp_negociation = private_rdp_negociation;
+            /*
+            rdp_negociation.sesman_event = this->session_reactor.create_sesman_event()
+            .on_action([this, &](JLN_ACTION_CTX ctx, Inifile& ini){
+                LOG(LOG_INFO, "Here! Sesman event");
+
+                return ctx.ready();
+
+                // rdp_negociation.....
+                // JLN_ACTION_CTX -> https://github.com/wallix/redemption/blob/future/src/core/session_reactor.hpp#L429
+                // return ctx.terminate();
+                // return ctx.exception(Error(ERR_.....));
+            }));*/
+
+
             bool const is_finish = rdp_negociation.recv_data(this->buf);
 
             // RdpNego::recv_next_data set a new fd if tls

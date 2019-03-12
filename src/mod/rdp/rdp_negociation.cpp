@@ -248,20 +248,20 @@ void RdpNegociation::RDPServerNotifier::server_cert_error(const char * str_error
 }
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
-bool RdpNegociation::RDPServerNotifier::server_cert_callback(const X509 * certificate)
+CertificateResult RdpNegociation::RDPServerNotifier::server_cert_callback(const X509 * certificate)
 {
     if (this->certificate_callback != nullptr) {
         return this->certificate_callback(certificate);
     }
 
-    return false;
+    return CertificateResult::invalid;
 }
 
 bool RdpNegociation::RDPServerNotifier::server_cert_callback_required() {
     return this->certificate_callback != nullptr;
 }
 
-void RdpNegociation::RDPServerNotifier::set_cert_callback(const ServerCertificateCallback callback) noexcept {
+void RdpNegociation::RDPServerNotifier::set_cert_callback(ServerCertificateCallback callback) noexcept {
     this->certificate_callback = callback;
 }
 #endif
@@ -386,7 +386,11 @@ RdpNegociation::RdpNegociation(
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
     if (mod_rdp_params.server_cert_callback != nullptr) {
-        this->server_notifier.set_cert_callback(mod_rdp_params.server_cert_callback);
+        this->server_notifier.set_cert_callback([&](const X509* x509){
+            return mod_rdp_params.server_cert_callback(x509, [&]{
+                (void)this->trans.enable_client_tls(false, this->server_cert_check, server_notifier, "");
+            });
+        });
     }
 #endif
 
@@ -474,10 +478,11 @@ void RdpNegociation::set_program(char const* program, char const* directory) noe
 }
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
+/*
 void RdpNegociation::set_cert_callback(const ServerCertificateCallback callback) noexcept
 {
     this->server_notifier.set_cert_callback(callback);
-}
+}*/
 #endif
 
 

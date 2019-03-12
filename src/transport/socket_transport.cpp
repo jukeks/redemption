@@ -152,7 +152,7 @@ Transport::TlsResult SocketTransport::enable_client_tls(bool server_cert_store,
                                                        this->error_message,
                                                        this->ip_address,
                                                        this->port);
-                    assert(ret != Transport::TlsResult::Want);
+                    //assert(ret != Transport::TlsResult::Want);
                 }
                 catch (...) {
                     this->tls_state = TLSState::Uninit;

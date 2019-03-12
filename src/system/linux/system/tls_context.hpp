@@ -259,14 +259,10 @@ public:
         if (server_notifier.server_cert_callback_required()) {
             LOG(LOG_INFO, "proxying certficate validation to authentifier");
 
-            bool valid = server_notifier.server_cert_callback(px509);
+            auto result = server_notifier.server_cert_callback(px509);
             X509_free(px509);
 
-            if (!valid) {
-                LOG(LOG_WARNING, "server_cert_callback() failed");
-                server_notifier.server_cert_error(strerror(errno));
-                return Transport::TlsResult::Fail;
-            } else {
+            if (result == CertificateResult::valid) {
                 if (error_message) {
                     error_message->clear();
                 }
@@ -277,6 +273,13 @@ public:
                 server_notifier.server_cert_success();
                 //server_notifier.server_access_allowed();
                 return Transport::TlsResult::Ok;
+            } else if (result == CertificateResult::wait) {
+                LOG(LOG_INFO, "server_cert_callback() wait");
+                return Transport::TlsResult::Want;
+            } else {
+                LOG(LOG_WARNING, "server_cert_callback() failed");
+                server_notifier.server_cert_error(strerror(errno));
+                return Transport::TlsResult::Fail;
             }
         }
 #endif
@@ -917,7 +920,7 @@ public:
                     return rcvd;
 
                 case SSL_ERROR_WANT_READ:
-                    LOG(LOG_INFO, "recv_tls WANT READ");
+                    //LOG(LOG_INFO, "recv_tls WANT READ");
                     continue;
 
                 case SSL_ERROR_WANT_WRITE:

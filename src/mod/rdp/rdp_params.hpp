@@ -156,7 +156,8 @@ struct ModRDPParams
     ServerNotification server_cert_error_message = ServerNotification::syslog;
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
-    ServerCertificateCallback server_cert_callback;
+    CertificateResult result;
+    ServerCertificateCallback2 server_cert_callback;
 #endif
 
     bool hide_client_name = false;

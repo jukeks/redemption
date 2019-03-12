@@ -26,7 +26,10 @@
 #include <openssl/ssl.h>
 #include <functional> // std::function
 
-using ServerCertificateCallback = std::function<bool(const X509*)>;
+enum CertificateResult { wait, valid, invalid };
+
+using ServerCertificateCallback = std::function<CertificateResult(const X509*)>;
+using ServerCertificateCallback2 = std::function<CertificateResult(const X509*, std::function<void()>)>;
 #endif
 
 class ServerNotifier {
@@ -39,7 +42,7 @@ public:
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
     virtual bool server_cert_callback_required() = 0;
-    virtual bool server_cert_callback(const X509* certificate) = 0;
+    virtual CertificateResult server_cert_callback(const X509* certificate) = 0;
 #endif
 
     virtual ~ServerNotifier() = default;
@@ -53,7 +56,7 @@ public:
     void server_cert_failure() override {}
 
 #ifdef REDEMPTION_SERVER_CERT_CALLBACK
-    bool server_cert_callback(const X509* certificate) override { (void)certificate; return false; }
+    CertificateResult server_cert_callback(const X509*) override { return CertificateResult::invalid; }
     bool server_cert_callback_required() override { return false; };
 #endif
 
