@@ -8,7 +8,7 @@
 
 enum authid_t : unsigned;
 
-constexpr authid_t MAX_AUTHID = authid_t(177);
+constexpr authid_t MAX_AUTHID = authid_t(179);
 
 constexpr array_view_const_char const authstr[] = {
     "capture_chunk"_av,
@@ -37,6 +37,8 @@ constexpr array_view_const_char const authstr[] = {
     "tls_min_level"_av,
     "tls_max_level"_av,
     "show_common_cipher_list"_av,
+    "allow_channels"_av,
+    "deny_channels"_av,
     "server_redirection"_av,
     "load_balance_info"_av,
     "rdp_bogus_sc_net_size"_av,
